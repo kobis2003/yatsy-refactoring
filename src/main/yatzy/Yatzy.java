@@ -1,246 +1,157 @@
 package yatzy;
 
-import java.util.Arrays;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class Yatzy {
 
 
-    private final int[] diceValues;
-    public Yatzy(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] diceValues = new int[]{d1, d2, d3, d4, d5};
+    private final Integer[] sortedDiceValues;
+
+    public Yatzy(int d1, int d2, int d3, int d4, int d5) {
+        Integer[] diceValues = new Integer[]{d1, d2, d3, d4, d5};
         if (Arrays.stream(diceValues).anyMatch(value -> value < 1 || value > 6)) {
             throw new IllegalArgumentException("Dice values must be between 1 and 6.");
         }
-        Arrays.sort(diceValues); // Sort the dice values
-        this.diceValues = diceValues;
+        this.sortedDiceValues = Arrays.stream(diceValues)
+            .sorted()
+            .toArray(Integer[]::new);
     }
 
-    public static int chance(int d1, int d2, int d3, int d4, int d5)
-    {
-        int total = 0;
-        total += d1;
-        total += d2;
-        total += d3;
-        total += d4;
-        total += d5;
-        return total;
+    /**
+     * @return the total sum of all dices
+     */
+    public int chance() {
+        return Arrays.stream(sortedDiceValues)
+            .mapToInt(Integer::intValue)
+            .sum();
     }
 
-    public static int yatzy(int... dice)
-    {
-        int[] counts = new int[6];
-        for (int die : dice)
-            counts[die-1]++;
-        for (int i = 0; i != 6; i++)
-            if (counts[i] == 5)
-                return 50;
-        return 0;
+    /**
+     * @return 50 if the five dices have the same values, 0 otherwise
+     */
+    public int yatzy() {
+        return Objects.equals(sortedDiceValues[0], sortedDiceValues[sortedDiceValues.length - 1]) ? 50 : 0;
     }
 
-    public static int ones(int d1, int d2, int d3, int d4, int d5) {
-        int sum = 0;
-        if (d1 == 1) sum++;
-        if (d2 == 1) sum++;
-        if (d3 == 1) sum++;
-        if (d4 == 1) sum++;
-        if (d5 == 1) 
-            sum++;
-
-        return sum;
-    }
-
-    public static int twos(int d1, int d2, int d3, int d4, int d5) {
-        int sum = 0;
-        if (d1 == 2) sum += 2;
-        if (d2 == 2) sum += 2;
-        if (d3 == 2) sum += 2;
-        if (d4 == 2) sum += 2;
-        if (d5 == 2) sum += 2;
-        return sum;
-    }
-
-    public static int threes(int d1, int d2, int d3, int d4, int d5) {
-        int s;    
-        s = 0;
-        if (d1 == 3) s += 3;
-        if (d2 == 3) s += 3;
-        if (d3 == 3) s += 3;
-        if (d4 == 3) s += 3;
-        if (d5 == 3) s += 3;
-        return s;
+    /**
+     * @param diceValue the value of the dice we want the sum of
+     * @return the sum of the dice having the corresponding value
+     */
+    private int sumDicesWithValue(int diceValue) {
+        return (int) Arrays.stream(sortedDiceValues)
+            .filter(x -> x == diceValue)
+            .count() * diceValue;
     }
 
 
+    public int ones() {
+        return sumDicesWithValue(1);
+    }
 
-    public int fours()
-    {
-        int sum;    
-        sum = 0;
-        for (int at = 0; at != 5; at++) {
-            if (diceValues[at] == 4) {
-                sum += 4;
-            }
+    public int twos() {
+        return sumDicesWithValue(2);
+    }
+
+    public int threes() {
+        return sumDicesWithValue(3);
+    }
+
+    public int fours() {
+        return sumDicesWithValue(4);
+    }
+
+    public int fives() {
+        return sumDicesWithValue(5);
+    }
+
+    public int sixes() {
+        return sumDicesWithValue(6);
+    }
+
+    /**
+     * if there are two pair of dice having the same value, it just use the biggest dice value to calculate the result
+     *
+     * @param numberOfDiceThatShouldHaveTheSameValue The number of dice that should have the same value
+     * @return The value * the number of dice that should have the same value if there are enough dice with
+     * same values, 0 otherwise
+     */
+    private int nOfAKind(int numberOfDiceThatShouldHaveTheSameValue) {
+        return Arrays.stream(this.sortedDiceValues)
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+            .entrySet()
+            .stream()
+            .filter(entry -> entry.getValue() >= numberOfDiceThatShouldHaveTheSameValue)
+            .max(Comparator.comparingInt(Map.Entry::getKey))
+            .map(entry -> entry.getKey() * numberOfDiceThatShouldHaveTheSameValue)
+            .orElse(0);
+    }
+
+
+    /**
+     * @return 2 * the biggest dice value that is at least in double, 0 if there are no pair
+     */
+    public int onePair() {
+        return nOfAKind(2);
+    }
+
+    /**
+     * @return 2* the sum of the two pair (if there are two pair), 0 otherwise
+     */
+    public int twoPair() {
+        List<Map.Entry<Integer, Long>> diceValueAndCountStream = Arrays.stream(this.sortedDiceValues)
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+            .entrySet().stream().filter(entry -> entry.getValue() >= 2).toList();
+
+        if (diceValueAndCountStream.size() > 1) {
+            return diceValueAndCountStream.stream()
+                .mapToInt(entry -> entry.getKey() * 2)
+                .sum();
+        } else {
+            return 0;
         }
-        return sum;
     }
 
-    public int fives()
-    {
-        int s = 0;
-        int i;
-        for (i = 0; i < diceValues.length; i++)
-            if (diceValues[i] == 5)
-                s = s + 5;
-        return s;
+
+    public int threeOfAKind() {
+        return nOfAKind(3);
     }
 
-    public int sixes()
-    {
-        int sum = 0;
-        for (int at = 0; at < diceValues.length; at++)
-            if (diceValues[at] == 6)
-                sum = sum + 6;
-        return sum;
+
+    public int fourOfAKind() {
+        return nOfAKind(4);
     }
 
-    public static int score_pair(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] counts = new int[6];
-        counts[d1-1]++;
-        counts[d2-1]++;
-        counts[d3-1]++;
-        counts[d4-1]++;
-        counts[d5-1]++;
-        int at;
-        for (at = 0; at != 6; at++)
-            if (counts[6-at-1] >= 2)
-                return (6-at)*2;
-        return 0;
+    /**
+     *
+     * @return 15 if the dice numbers are a small straight (meaning distinct from 1 to 5), 0 otherwise
+     */
+    public int smallStraight() {
+        return Arrays.equals(this.sortedDiceValues, new Integer[]{1, 2, 3, 4, 5})? 15 : 0;
     }
 
-    public static int two_pair(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] counts = new int[6];
-        counts[d1-1]++;
-        counts[d2-1]++;
-        counts[d3-1]++;
-        counts[d4-1]++;
-        counts[d5-1]++;
-        int n = 0;
-        int score = 0;
-        for (int i = 0; i < 6; i += 1)
-            if (counts[6-i-1] >= 2) {
-                n++;
-                score += (6-i);
-            }        
-        if (n == 2)
-            return score * 2;
-        else
-            return 0;
+    /**
+     *
+     * @return 20 if the dice numbers are a large straight (meaning distinct from 2 to 6), 0 otherwise
+     */
+    public int largeStraight() {
+        return Arrays.equals(this.sortedDiceValues, new Integer[]{2, 3, 4, 5, 6})? 20 : 0;
     }
 
-    public static int four_of_a_kind(int _1, int _2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        tallies = new int[6];
-        tallies[_1-1]++;
-        tallies[_2-1]++;
-        tallies[d3-1]++;
-        tallies[d4-1]++;
-        tallies[d5-1]++;
-        for (int i = 0; i < 6; i++)
-            if (tallies[i] >= 4)
-                return (i+1) * 4;
-        return 0;
-    }
+    /**
+     *
+     * @return the sum of all the dices if it is a fullHouse (2 dice number are the same and three other dice numbers
+     *  are also the same)
+     */
+    public int fullHouse() {
+        var diceNumbersCount = Arrays.stream(this.sortedDiceValues)
+            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-    public static int three_of_a_kind(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] t;
-        t = new int[6];
-        t[d1-1]++;
-        t[d2-1]++;
-        t[d3-1]++;
-        t[d4-1]++;
-        t[d5-1]++;
-        for (int i = 0; i < 6; i++)
-            if (t[i] >= 3)
-                return (i+1) * 3;
-        return 0;
-    }
+        boolean containsTwoDiceWithSameValue = diceNumbersCount.values().stream().anyMatch(count -> count == 2);
+        boolean containsThreeDiceWithSameValue = diceNumbersCount.values().stream().anyMatch(count -> count == 3);
 
-    public static int smallStraight(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-        if (tallies[0] == 1 &&
-            tallies[1] == 1 &&
-            tallies[2] == 1 &&
-            tallies[3] == 1 &&
-            tallies[4] == 1)
-            return 15;
-        return 0;
-    }
-
-    public static int largeStraight(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-        if (tallies[1] == 1 &&
-            tallies[2] == 1 &&
-            tallies[3] == 1 &&
-            tallies[4] == 1
-            && tallies[5] == 1)
-            return 20;
-        return 0;
-    }
-
-    public static int fullHouse(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        boolean _2 = false;
-        int i;
-        int _2_at = 0;
-        boolean _3 = false;
-        int _3_at = 0;
-
-
-
-
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-
-        for (i = 0; i != 6; i += 1)
-            if (tallies[i] == 2) {
-                _2 = true;
-                _2_at = i+1;
-            }
-
-        for (i = 0; i != 6; i += 1)
-            if (tallies[i] == 3) {
-                _3 = true;
-                _3_at = i+1;
-            }
-
-        if (_2 && _3)
-            return _2_at * 2 + _3_at * 3;
-        else
-            return 0;
+        return (containsTwoDiceWithSameValue && containsThreeDiceWithSameValue) ? Arrays.stream(this.sortedDiceValues).mapToInt(Integer::intValue).sum() : 0;
     }
 }
 
