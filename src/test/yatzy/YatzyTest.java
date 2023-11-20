@@ -163,7 +163,8 @@ public class YatzyTest {
     @ParameterizedTest
     @CsvSource({
         "6, 2, 2, 2, 6, 18",
-        "2, 3, 4, 5, 6, 0"
+        "2, 3, 4, 5, 6, 0",
+        "6, 2, 3, 2, 6, 0",
     })
     public void fullHouse(int d1, int d2, int d3, int d4, int d5, int expectedResult) {
         assertEquals(expectedResult, new Yatzy(d1, d2, d3, d4, d5).fullHouse());
