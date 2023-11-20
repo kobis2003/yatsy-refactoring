@@ -4,6 +4,12 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * This class is used for yatsy game score calculation.
+ * A yatzy seems to be played by rolling 5 dices.
+ * A new class must be instanced every time we roll the dices and then we can
+ * use the public function to check the yatsy combination
+ */
 public class Yatzy {
 
 
@@ -17,22 +23,16 @@ public class Yatzy {
             throw new IllegalArgumentException("Dice values must be between 1 and 6.");
         }
 
-        this.sortedDiceValues = Arrays.stream(diceValues)
-            .sorted()
-            .toArray(Integer[]::new);
+        this.sortedDiceValues = Arrays.stream(diceValues).sorted().toArray(Integer[]::new);
 
-        this.countDiceByValue = Arrays.stream(this.sortedDiceValues)
-            .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-            .entrySet();
+        this.countDiceByValue = Arrays.stream(this.sortedDiceValues).collect(Collectors.groupingBy(Function.identity(), Collectors.counting())).entrySet();
     }
 
     /**
      * @return the total sum of all dices
      */
     public int chance() {
-        return Arrays.stream(sortedDiceValues)
-            .mapToInt(Integer::intValue)
-            .sum();
+        return Arrays.stream(sortedDiceValues).mapToInt(Integer::intValue).sum();
     }
 
     /**
@@ -46,36 +46,33 @@ public class Yatzy {
      * @param diceValue the value of the dice we want the sum of
      * @return the sum of the dice having the corresponding value
      */
-    private int sumDicesWithValue(int diceValue) {
-        return Arrays.stream(sortedDiceValues)
-            .filter(x -> x == diceValue)
-            .mapToInt(Integer::intValue)
-            .sum();
+    private int sumDicesHavingValue(int diceValue) {
+        return Arrays.stream(sortedDiceValues).filter(x -> x == diceValue).mapToInt(Integer::intValue).sum();
     }
 
 
     public int ones() {
-        return sumDicesWithValue(1);
+        return sumDicesHavingValue(1);
     }
 
     public int twos() {
-        return sumDicesWithValue(2);
+        return sumDicesHavingValue(2);
     }
 
     public int threes() {
-        return sumDicesWithValue(3);
+        return sumDicesHavingValue(3);
     }
 
     public int fours() {
-        return sumDicesWithValue(4);
+        return sumDicesHavingValue(4);
     }
 
     public int fives() {
-        return sumDicesWithValue(5);
+        return sumDicesHavingValue(5);
     }
 
     public int sixes() {
-        return sumDicesWithValue(6);
+        return sumDicesHavingValue(6);
     }
 
 
@@ -83,12 +80,7 @@ public class Yatzy {
      * @return 2 * the biggest dice value that is at least in double, 0 if there are no pair
      */
     public int onePair() {
-        return this.countDiceByValue
-            .stream()
-            .filter(entry -> entry.getValue() >= 2)
-            .max(Comparator.comparingInt(Map.Entry::getKey))
-            .map(entry -> entry.getKey() * 2)
-            .orElse(0);
+        return this.countDiceByValue.stream().filter(entry -> entry.getValue() >= 2).max(Comparator.comparingInt(Map.Entry::getKey)).map(entry -> entry.getKey() * 2).orElse(0);
     }
 
     /**
@@ -99,10 +91,7 @@ public class Yatzy {
      * same values, 0 otherwise
      */
     private int nOfAKind(int minNumberOfDiceWithTheSameValue) {
-        return this.countDiceByValue.stream()
-            .filter(entry -> entry.getValue() >= minNumberOfDiceWithTheSameValue)
-            .mapToInt(entry -> entry.getKey() * minNumberOfDiceWithTheSameValue)
-            .sum();
+        return this.countDiceByValue.stream().filter(entry -> entry.getValue() >= minNumberOfDiceWithTheSameValue).mapToInt(entry -> entry.getKey() * minNumberOfDiceWithTheSameValue).sum();
     }
 
 
@@ -110,8 +99,7 @@ public class Yatzy {
      * @return 2* the sum of the two pair (if there are two pair), 0 otherwise
      */
     public int twoPair() {
-        if (this.countDiceByValue.stream()
-            .filter(entry -> entry.getValue() >= 2).count() > 1) {
+        if (this.countDiceByValue.stream().filter(entry -> entry.getValue() >= 2).count() > 1) {
             return nOfAKind(2);
         } else {
             return 0;
@@ -147,9 +135,11 @@ public class Yatzy {
      * are also the same)
      */
     public int fullHouse() {
-        return (this.countDiceByValue
-            .stream().anyMatch(entry -> entry.getValue() == 2) && this.countDiceByValue
-            .stream().anyMatch(entry -> entry.getValue() == 3)) ? Arrays.stream(this.sortedDiceValues).mapToInt(Integer::intValue).sum() : 0;
+        if(this.countDiceByValue.stream().anyMatch(entry -> entry.getValue() == 2) &&
+            this.countDiceByValue.stream().anyMatch(entry -> entry.getValue() == 3)) {
+            return this.chance();
+        }
+        return 0;
     }
 
 
