@@ -1,6 +1,20 @@
 package yatzy;
 
+import java.util.Arrays;
+
 public class Yatzy {
+
+
+    private final int[] diceValues;
+    public Yatzy(int d1, int d2, int d3, int d4, int d5)
+    {
+        int[] diceValues = new int[]{d1, d2, d3, d4, d5};
+        if (Arrays.stream(diceValues).anyMatch(value -> value < 1 || value > 6)) {
+            throw new IllegalArgumentException("Dice values must be between 1 and 6.");
+        }
+        Arrays.sort(diceValues); // Sort the dice values
+        this.diceValues = diceValues;
+    }
 
     public static int chance(int d1, int d2, int d3, int d4, int d5)
     {
@@ -57,23 +71,14 @@ public class Yatzy {
         return s;
     }
 
-    protected int[] dice;
-    public Yatzy(int d1, int d2, int d3, int d4, int _5)
-    {
-        dice = new int[5];
-        dice[0] = d1;
-        dice[1] = d2;
-        dice[2] = d3;
-        dice[3] = d4;
-        dice[4] = _5;
-    }
+
 
     public int fours()
     {
         int sum;    
         sum = 0;
         for (int at = 0; at != 5; at++) {
-            if (dice[at] == 4) {
+            if (diceValues[at] == 4) {
                 sum += 4;
             }
         }
@@ -84,8 +89,8 @@ public class Yatzy {
     {
         int s = 0;
         int i;
-        for (i = 0; i < dice.length; i++) 
-            if (dice[i] == 5)
+        for (i = 0; i < diceValues.length; i++)
+            if (diceValues[i] == 5)
                 s = s + 5;
         return s;
     }
@@ -93,8 +98,8 @@ public class Yatzy {
     public int sixes()
     {
         int sum = 0;
-        for (int at = 0; at < dice.length; at++) 
-            if (dice[at] == 6)
+        for (int at = 0; at < diceValues.length; at++)
+            if (diceValues[at] == 6)
                 sum = sum + 6;
         return sum;
     }

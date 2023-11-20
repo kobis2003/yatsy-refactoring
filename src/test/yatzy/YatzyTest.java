@@ -1,11 +1,23 @@
 package yatzy;
 
-import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class YatzyTest {
+
+    @ParameterizedTest
+    @CsvSource({
+        "0, 2, 3, 4, 5",
+        "1, 2, 3, 4, 7",
+        "1, 2, 8, 4, 5"
+    })
+    public void testInvalidDiceValues(int d1, int d2, int d3, int d4, int d5) {
+        assertThrows(IllegalArgumentException.class, () -> new Yatzy(d1, d2, d3, d4, d5));
+    }
 
     @Test
     public void chance_scores_sum_of_all_dice() {
