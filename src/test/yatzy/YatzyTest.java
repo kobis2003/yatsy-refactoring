@@ -1,5 +1,9 @@
-import org.junit.*;
-import static org.junit.Assert.*;
+package yatzy;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class YatzyTest {
 
